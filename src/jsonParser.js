@@ -3,7 +3,7 @@ const { last, pipe, replaceAll, objMap } = require("./util");
 const { Obj, Arr } = require("./AstElems");
 
 const generateAstArray = (jsonString) => {
-	const specialChars = ["{", "}", ":", "[", "]", ",", "\\"];
+  const specialChars = ["{", "}", ":", "[", "]", ",", "\\"];
 
   // TODO: don't remove whitespace within strings
   const noWhitespace = pipe(jsonString, [
@@ -15,7 +15,7 @@ const generateAstArray = (jsonString) => {
   let current = [];
   for (let i = 0; i < noWhitespace.length; i++) {
     const char = noWhitespace[i];
-		// const prevChar = i > 0 ? noWhitespace[i-1] : null;
+    // const prevChar = i > 0 ? noWhitespace[i-1] : null;
     if (specialChars.includes(char)) {
       if (current.length) {
         astArray.push(current.join(""));
@@ -95,7 +95,7 @@ const generateAst = (astArray) => {
 
 const parseAst = (value) => {
   if (value instanceof Obj) {
-		return objMap(value.edges, parseAst);
+    return objMap(value.edges, parseAst);
   } else if (value instanceof Arr) {
     return value.edges.map(parseAst);
   } else {

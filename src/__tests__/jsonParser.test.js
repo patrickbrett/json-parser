@@ -1,39 +1,20 @@
-const { expect } = require('@jest/globals');
-const jsonParser = require('../jsonParser');
-const { read } = require('../util');
+const { expect } = require("@jest/globals");
+const jsonParser = require("../jsonParser");
+const { read } = require("../util");
 
-test('correctly parses single key value pair', () => {
-  const jsonString = read('./data/single-kv.json');
-  const parsed = jsonParser(jsonString);
-  expect(parsed).toEqual(JSON.parse(jsonString));
-})
+const tests = [
+  ["single-kv", "correctly parses single key value pair"],
+  ["multi-kv", "correctly parses multiple key value pairs"],
+  ["nested-kv", "correctly parses nested key value pairs"],
+  ["kv-with-array", "correctly parses key value pairs with array"],
+  ["escaped", "correctly parses escaped values"],
+  ["complex1", "correctly parses complex json [1]"],
+];
 
-test('correctly parses multiple key value pairs', () => {
-  const jsonString = read('./data/multi-kv.json');
-  const parsed = jsonParser(jsonString);
-  expect(parsed).toEqual(JSON.parse(jsonString));
-})
-
-test('correctly parses nested key value pairs', () => {
-  const jsonString = read('./data/nested-kv.json');
-  const parsed = jsonParser(jsonString);
-  expect(parsed).toEqual(JSON.parse(jsonString));
-})
-
-test('correctly parses key value pairs with array', () => {
-  const jsonString = read('./data/kv-with-array.json');
-  const parsed = jsonParser(jsonString);
-  expect(parsed).toEqual(JSON.parse(jsonString));
-})
-
-test('correctly parses escaped values', () => {
-  const jsonString = read('./data/escaped.json');
-  const parsed = jsonParser(jsonString);
-  expect(parsed).toEqual(JSON.parse(jsonString));
-})
-
-test('correctly parses complex json [1]', () => {
-  const jsonString = read('./data/complex1.json');
-  const parsed = jsonParser(jsonString);
-  expect(parsed).toEqual(JSON.parse(jsonString));
-})
+tests.forEach(([fname, desc]) => {
+  test(desc, () => {
+    const jsonString = read(`./data/${fname}.json`);
+    const parsed = jsonParser(jsonString);
+    expect(parsed).toEqual(JSON.parse(jsonString));
+  });
+});

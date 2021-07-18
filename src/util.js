@@ -32,6 +32,6 @@ const objMap = (obj, mapFunc) => {
     newObj[key] = mapFunc(val);
   });
   return newObj;
-}
+};
 
 module.exports = { last, inspect, read, write, pipe, replaceAll, objMap };

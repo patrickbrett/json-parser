@@ -11,14 +11,7 @@ class Arr {
   }
 }
 
-class Val {
-  constructor(val) {
-    this.val = val;
-  }
-}
-
 module.exports = {
   Obj,
   Arr,
-  Val,
 };
