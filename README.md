@@ -131,4 +131,5 @@ The parser currently assumes all files passed to it are valid JSON, and therefor
 ## Further reading
 
 [Abstract Syntax Trees](https://en.wikipedia.org/wiki/Abstract_syntax_tree)
+
 [Parse Trees](https://en.wikipedia.org/wiki/Parse_tree)
