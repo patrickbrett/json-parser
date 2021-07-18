@@ -7,10 +7,11 @@ const tests = [
   ["multi-kv", "correctly parses multiple key value pairs"],
   ["nested-kv", "correctly parses nested key value pairs"],
   ["kv-with-array", "correctly parses key value pairs with array"],
-  ["escaped", "correctly parses escaped values"],
+  ["escaped1", "correctly parses escaped values [1]"],
+  ["escaped2", "correctly parses escaped values [2]"],
   ["complex1", "correctly parses complex json [1]"],
   ["nulls", "correctly handles null values"],
-  
+
 ];
 
 tests.forEach(([fname, desc]) => {

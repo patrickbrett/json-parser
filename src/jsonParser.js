@@ -74,9 +74,15 @@ const processElem =
       return;
     }
 
-    const strippedElem = replaceAll('"', "")(elem);
+		const strippedElem = pipe(elem, [replaceAll('"', "")]);
+
     const parsedVal = (() => {
 			if (elem === 'null') return null;
+			if (elem.includes('\\')) {
+				const unquoted = elem.substr(1, elem.length-2);
+				return replaceAll('\\\\', '')(unquoted);
+			};
+
 			if (Number.isNaN(Number(strippedElem))) return strippedElem;
 			return Number(strippedElem);
 		})();

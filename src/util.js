@@ -18,7 +18,6 @@ const pipe = (init, funcs) => {
   let out = init;
   funcs.forEach((func) => {
     out = func(out);
-    console.log(out);
   });
   return out;
 };
