@@ -11,6 +11,9 @@ const tests = [
   ["escaped2", "correctly parses escaped values [2]"],
   ["complex1", "correctly parses complex json [1]"],
   ["nulls", "correctly handles null values"],
+  ["array", "correctly handles array as root element"],
+  ["empty", "correctly handles empty object"],
+  ["empty-array", "correctly handles empty array"],
 ];
 
 tests.forEach(([fname, desc]) => {

@@ -1,46 +1,103 @@
 const { last, pipe, replaceAll, objMap } = require("./util");
 
 const { Obj, Arr } = require("./AstElems");
+const { nargs } = require("yargs");
 
+const openerTypes = {
+  "{": Obj,
+  "[": Arr,
+};
+const closerTypes = {
+  "}": Obj,
+  "]": Arr,
+};
+const excludedChars = [":", ","];
+const specialChars = ["{", "}", "[", "]", ",", ":", "\\"];
+
+const Strings = {
+  ESCAPE: "\\",
+  DOUBLE_ESCAPE: "\\\\",
+  QUOTE: '"',
+  SPACE: " ",
+  EMPTY: "",
+  NEWLINE: "\n",
+  NULL: "null",
+};
+
+/**
+ * Generates an array containing all relevant tokens in the JSON
+ * @param {*} jsonString original stringified JSON to parse
+ * @returns array of tokens
+ * 
+ * Example input:
+  {
+    "key": "value",
+    "another": null,
+    "nested": {
+      "something": null,
+      "finally": 2
+    },
+    "array": [4, 5, "6, 7, 8", null, 21]
+  }
+  
+ * Example output:
+  [
+    '{',           '"key"',     ':',
+    '"value"',     ',',         '"another"',
+    ':',           'null',      ',',
+    '"nested"',    ':',         '{',
+    '"something"', ':',         'null',
+    ',',           '"finally"', ':',
+    '2',           '}',         ',',
+    '"array"',     ':',         '[',
+    '4',           ',',         '5',
+    ',',           '"6, 7, 8"', ',',
+    'null',        ',',         '21',
+    ']',           '}'
+  ]
+ */
 const generateAstArray = (jsonString) => {
-  const specialChars = ["{", "}", ":", "[", "]", ",", "\\"];
-
-  const noNewlines = pipe(jsonString, [
-    replaceAll("\n", ""),
-  ]);
+  const noNewlines = replaceAll("\n", "")(jsonString);
   const astArray = [];
 
-	let insideQuotes = false;
+  let isInsideQuotes = false;
+  let currentToken = [];
 
-  let current = [];
-  for (let i = 0; i < noNewlines.length; i++) {
-    const char = noNewlines[i];
-    const prevChar = i > 0 ? noNewlines[i-1] : null;
+  const chars = noNewlines.split(Strings.EMPTY);
 
-		if (char === '"' && prevChar !== '\\') {
-			insideQuotes = !insideQuotes;
-		}
+  chars.forEach((char, i) => {
+    const prevChar = i > 0 ? noNewlines[i - 1] : null;
 
-    if (specialChars.includes(char) && !insideQuotes) {
-      if (current.length) {
-        astArray.push(current.join(""));
-        current = [];
+    if (char === Strings.QUOTE && prevChar !== Strings.ESCAPE) {
+      isInsideQuotes = !isInsideQuotes;
+    }
+
+    if (specialChars.includes(char) && !isInsideQuotes) {
+      if (currentToken.length) {
+        astArray.push(currentToken.join(Strings.EMPTY));
+        currentToken = [];
       }
       astArray.push(char);
-    } else if (insideQuotes || char !== ' ') {
-			current.push(char);
-		}
-  }
+    } else if (isInsideQuotes || char !== Strings.SPACE) {
+      currentToken.push(char);
+    }
+  });
 
   return astArray;
 };
 
+/**
+ * Puts an object key or value into the relevant object or array in the AST.
+ *
+ * @param {*} stack stack showing current nesting level
+ * @param {*} toAdd value to add if an object value
+ * @param {*} toAddPendingKey value to add if an object key
+ * @returns
+ */
 const putSubvalue = (stack, toAdd, toAddPendingKey) => {
-  if (stack.length === 0) return;
-
   const lastElem = last(stack);
 
-	if (lastElem instanceof Arr) {
+  if (lastElem instanceof Arr) {
     lastElem.edges.push(toAdd);
   } else if (lastElem instanceof Obj) {
     if (lastElem.pendingKey) {
@@ -52,57 +109,42 @@ const putSubvalue = (stack, toAdd, toAddPendingKey) => {
   }
 };
 
-const processElem =
-  (openerTypes, closerTypes, excludedTypes, stack) => (elem) => {
-    if (excludedTypes.includes(elem)) return;
+const processElem = (stack) => (elem) => {
+  if (excludedChars.includes(elem)) return;
 
-    if (Object.keys(openerTypes).includes(elem)) {
-      const astElem = new openerTypes[elem]();
-      stack.push(astElem);
-      if (stack.length === 1) {
-        return last(stack);
-      }
-      return;
+  if (Object.keys(openerTypes).includes(elem)) {
+    const astElem = new openerTypes[elem]();
+    stack.push(astElem);
+    return last(stack);
+  }
+
+  if (Object.keys(closerTypes).includes(elem)) {
+    if (last(stack) instanceof closerTypes[elem]) {
+      putSubvalue(stack, stack.pop());
+    }
+    return;
+  }
+
+  const strippedElem = replaceAll(Strings.QUOTE, Strings.EMPTY)(elem);
+
+  const parsedVal = (() => {
+    if (elem === Strings.NULL) return null;
+    if (elem.includes(Strings.ESCAPE)) {
+      const unquoted = elem.substr(1, elem.length - 2);
+      return replaceAll(Strings.DOUBLE_ESCAPE, Strings.EMPTY)(unquoted);
     }
 
-    if (Object.keys(closerTypes).includes(elem)) {
-      if (stack.length > 0 && last(stack) instanceof closerTypes[elem]) {
-        putSubvalue(stack, stack.pop());
-      }
-      return;
-    }
+    if (Number.isNaN(Number(strippedElem))) return strippedElem;
+    return Number(strippedElem);
+  })();
 
-		const strippedElem = pipe(elem, [replaceAll('"', "")]);
-
-    const parsedVal = (() => {
-			if (elem === 'null') return null;
-			if (elem.includes('\\')) {
-				const unquoted = elem.substr(1, elem.length-2);
-				return replaceAll('\\\\', '')(unquoted);
-			};
-
-			if (Number.isNaN(Number(strippedElem))) return strippedElem;
-			return Number(strippedElem);
-		})();
-
-    putSubvalue(stack, parsedVal, strippedElem);
-  };
+  putSubvalue(stack, parsedVal, strippedElem);
+};
 
 const generateAst = (astArray) => {
   const stack = [];
-  const openerTypes = {
-    "{": Obj,
-    "[": Arr,
-  };
-  const closerTypes = {
-    "}": Obj,
-    "]": Arr,
-  };
-  const excludedTypes = [":", ","];
 
-  const tree = astArray
-    .map(processElem(openerTypes, closerTypes, excludedTypes, stack))
-    .find(Boolean);
+  const tree = astArray.map(processElem(stack))[0];
 
   return tree;
 };
