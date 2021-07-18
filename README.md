@@ -64,7 +64,7 @@ The raw JSON string is the input to the algorithm.
 ]
 ```
 
-The token array represents the JSON data as a list of tokens, each of which may be a value, brace or other symbol. Strings are stored in nested quotes while numbers, null values and other symbols are stored as regular strings. This intermediate representation makes the transition to a tree-based structure simpler and more efficient.
+The token array represents the JSON data as a list of tokens, each of which may be a value, brace or other symbol. Strings are stored in nested quotes while numbers, null values and other symbols are stored as regular strings. Whitespace outside of strings is removed. This intermediate representation makes the transition to a tree-based structure simpler and more efficient.
 
 ### Abstract Syntax Tree
 
