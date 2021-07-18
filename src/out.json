@@ -1,8 +1,0 @@
-{
-  "key": {
-    "another": { "val": "value" },
-    "third": { "val": "something" },
-    "fourth": { "val": 5 },
-    "fifth": [{ "val": 1 }, { "val": 2 }, { "val": "three" }]
-  }
-}

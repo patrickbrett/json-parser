@@ -25,71 +25,66 @@ const generateAstArray = (jsonString) => {
   return astArray;
 };
 
+const putSubvalue = (stack, toAdd, toAddPendingKey) => {
+  if (stack.length > 0) {
+    const lastElem = last(stack);
+    if (lastElem instanceof Obj) {
+      if (lastElem.pendingKey) {
+        lastElem.edges[lastElem.pendingKey] = toAdd;
+        lastElem.pendingKey = null;
+      } else {
+        lastElem.pendingKey = toAddPendingKey;
+      }
+    } else if (lastElem instanceof Arr) {
+      lastElem.edges.push(toAdd);
+    }
+  }
+};
+
+const processElem =
+  (openerTypes, closerTypes, excludedTypes, stack) => (elem) => {
+    if (excludedTypes.includes(elem)) return;
+
+    if (Object.keys(openerTypes).includes(elem)) {
+      const astElem = new openerTypes[elem]();
+      stack.push(astElem);
+      if (stack.length === 1) {
+        return last(stack);
+      }
+      return;
+    }
+
+    if (Object.keys(closerTypes).includes(elem)) {
+      if (stack.length > 0 && last(stack) instanceof closerTypes[elem]) {
+        putSubvalue(stack, stack.pop());
+      }
+      return;
+    }
+
+    const strippedElem = elem.replace(new RegExp('"', "g"), "");
+    const parsedVal = Number.isNaN(Number(strippedElem))
+      ? strippedElem
+      : Number(strippedElem);
+
+    putSubvalue(stack, parsedVal, strippedElem);
+  };
+
 const generateAst = (astArray) => {
   const stack = [];
 
-  let tree;
-
+  const openerTypes = {
+    "{": Obj,
+    "[": Arr,
+  };
   const closerTypes = {
     "}": Obj,
     "]": Arr,
   };
+  const excludedTypes = [":", ","];
 
-  for (elem of astArray) {
-    if (["{", "["].includes(elem)) {
-      const astElem = (() => {
-        if (elem === "{") {
-          return new Obj();
-        } else if (elem === "[") {
-          return new Arr();
-        }
-      })();
-      if (!stack.length) {
-        tree = astElem;
-      }
-      stack.push(astElem);
-    } else if (["}", "]"].includes(elem)) {
-      if (stack.length > 0 && last(stack) instanceof closerTypes[elem]) {
-        const toAdd = stack.pop();
-
-        // TODO: reduce repetition
-        if (stack.length > 0) {
-          const lastElem = last(stack);
-          if (lastElem instanceof Obj) {
-            if (lastElem.pendingKey) {
-              lastElem.edges[lastElem.pendingKey] = toAdd;
-              lastElem.pendingKey = null;
-            }
-          } else if (lastElem instanceof Arr) {
-            lastElem.edges.push(toAdd);
-          }
-        }
-      }
-    } else {
-      if ([":", ","].includes(elem)) {
-        continue;
-      }
-
-      const strippedElem = elem.replace(new RegExp('"', "g"), "");
-      const parsedVal = Number.isNaN(Number(strippedElem))
-        ? strippedElem
-        : Number(strippedElem);
-
-      if (stack.length > 0) {
-        const lastElem = last(stack);
-        if (lastElem instanceof Obj) {
-          if (lastElem.pendingKey) {
-            lastElem.edges[lastElem.pendingKey] = parsedVal;
-            lastElem.pendingKey = null;
-          } else {
-            lastElem.pendingKey = strippedElem;
-          }
-        } else if (lastElem instanceof Arr) {
-          lastElem.edges.push(parsedVal);
-        }
-      }
-    }
-  }
+  const tree = astArray
+    .map(processElem(openerTypes, closerTypes, excludedTypes, stack))
+    .find(Boolean);
 
   return tree;
 };
