@@ -22,4 +22,7 @@ const pipe = (init, funcs) => {
   return out;
 };
 
-module.exports = { last, inspect, read, write, pipe };
+const replaceAll = (from, to) => (str) =>
+  str.replace(new RegExp(from, "g"), to);
+
+module.exports = { last, inspect, read, write, pipe, replaceAll };

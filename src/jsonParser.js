@@ -1,11 +1,13 @@
-const { last, pipe } = require("./util");
+const { last, pipe, replaceAll } = require("./util");
 
 const { Obj, Arr } = require("./AstElems");
 
 const generateAstArray = (jsonString) => {
   // TODO: don't remove whitespace within strings
-  const noWhitespace = jsonString.replace(new RegExp("[\n ]", "g"), "");
-  console.log(noWhitespace);
+  const noWhitespace = pipe(jsonString, [
+    replaceAll("\n", ""),
+    replaceAll(" ", ""),
+  ]);
   const astArray = [];
 
   let current = [];
@@ -26,18 +28,18 @@ const generateAstArray = (jsonString) => {
 };
 
 const putSubvalue = (stack, toAdd, toAddPendingKey) => {
-  if (stack.length > 0) {
-    const lastElem = last(stack);
-    if (lastElem instanceof Obj) {
-      if (lastElem.pendingKey) {
-        lastElem.edges[lastElem.pendingKey] = toAdd;
-        lastElem.pendingKey = null;
-      } else {
-        lastElem.pendingKey = toAddPendingKey;
-      }
-    } else if (lastElem instanceof Arr) {
-      lastElem.edges.push(toAdd);
+  if (stack.length === 0) return;
+
+  const lastElem = last(stack);
+  if (lastElem instanceof Obj) {
+    if (lastElem.pendingKey) {
+      lastElem.edges[lastElem.pendingKey] = toAdd;
+      lastElem.pendingKey = null;
+    } else {
+      lastElem.pendingKey = toAddPendingKey;
     }
+  } else if (lastElem instanceof Arr) {
+    lastElem.edges.push(toAdd);
   }
 };
 
@@ -61,7 +63,7 @@ const processElem =
       return;
     }
 
-    const strippedElem = elem.replace(new RegExp('"', "g"), "");
+    const strippedElem = replaceAll('"', "")(elem);
     const parsedVal = Number.isNaN(Number(strippedElem))
       ? strippedElem
       : Number(strippedElem);
@@ -71,7 +73,6 @@ const processElem =
 
 const generateAst = (astArray) => {
   const stack = [];
-
   const openerTypes = {
     "{": Obj,
     "[": Arr,
