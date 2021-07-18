@@ -18,6 +18,75 @@ The code is designed to be as modular as possible and while mutation is used in 
 - { "escaped": "\\"values\\"" }
 - { "values": "that", "are": null }
 
+## How it works
+
+The parser processes data through four stages:
+
+1. Raw JSON string
+2. Token array
+3. Abstract Syntax Tree
+4. Parsed JavaScript object
+
+Examples of each of these:
+
+### Raw JSON string
+
+```
+{
+    "key": "value",
+    "another": null,
+    "nested": {
+      "something": null,
+      "finally": 2
+    },
+    "array": [4, 5, "6, 7, 8", null, 21]
+  }
+```
+
+### Token array
+
+```
+[
+    '{',           '"key"',     ':',
+    '"value"',     ',',         '"another"',
+    ':',           'null',      ',',
+    '"nested"',    ':',         '{',
+    '"something"', ':',         'null',
+    ',',           '"finally"', ':',
+    '2',           '}',         ',',
+    '"array"',     ':',         '[',
+    '4',           ',',         '5',
+    ',',           '"6, 7, 8"', ',',
+    'null',        ',',         '21',
+    ']',           '}'
+  ]
+```
+
+### Abstract Syntax Tree
+
+```
+Obj {
+  edges: {
+    key: 'value',
+    another: null,
+    nested: Obj { edges: { something: null, finally: 2 }, pendingKey: null },
+    array: Arr { edges: [ 4, 5, '6, 7, 8', null, 21 ] }
+  },
+  pendingKey: null
+}
+```
+
+### Parsed JavaScript Object
+
+```
+  {
+    key: 'value',
+    another: null,
+    nested: { something: null, finally: 2 },
+    array: [ 4, 5, '6, 7, 8', null, 21 ]
+  }
+```
+
 ## How to use
 
 ### Using the module

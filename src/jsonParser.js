@@ -92,7 +92,7 @@ const generateAstArray = (jsonString) => {
  * @param {*} stack stack showing current nesting level
  * @param {*} toAdd token to add if an object value
  * @param {*} toAddPendingKey token to add if an object key
- * 
+ *
  * @returns nothing
  */
 const putSubvalue = (stack, toAdd, toAddPendingKey) => {
@@ -106,7 +106,8 @@ const putSubvalue = (stack, toAdd, toAddPendingKey) => {
     if (lastElem.pendingKey) {
       lastElem.edges[lastElem.pendingKey] = toAdd;
       lastElem.pendingKey = null;
-    } else { // otherwise, the current token is the key
+    } else {
+      // otherwise, the current token is the key
       lastElem.pendingKey = toAddPendingKey;
     }
   }
