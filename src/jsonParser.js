@@ -57,11 +57,11 @@ const Strings = {
     ']',           '}'
   ]
  */
-const generateAstArray = (jsonString) => {
+const generatetokenArray = (jsonString) => {
   const noNewlines = replaceAll("\n", "")(jsonString);
   const chars = noNewlines.split(Strings.EMPTY);
 
-  const astArray = [];
+  const tokenArray = [];
   let isInsideQuotes = false;
   let currentToken = [];
 
@@ -74,16 +74,16 @@ const generateAstArray = (jsonString) => {
 
     if (specialChars.includes(char) && !isInsideQuotes) {
       if (currentToken.length) {
-        astArray.push(currentToken.join(Strings.EMPTY));
+        tokenArray.push(currentToken.join(Strings.EMPTY));
         currentToken = [];
       }
-      astArray.push(char);
+      tokenArray.push(char);
     } else if (isInsideQuotes || char !== Strings.SPACE) {
       currentToken.push(char);
     }
   });
 
-  return astArray;
+  return tokenArray;
 };
 
 /**
@@ -173,7 +173,7 @@ const processElem = (stack) => (elem) => {
 
 /**
  * Processes the AST token array into a full AST tree.
- * @param {*} astArray AST array to process into a nested AST.
+ * @param {*} tokenArray AST array to process into a nested AST.
  * @returns nested AST built out of Obj and Arr instances.
  * 
  * Example input:
@@ -203,12 +203,12 @@ const processElem = (stack) => (elem) => {
     pendingKey: null
   }
  */
-const generateAst = (astArray) => {
+const generateAst = (tokenArray) => {
   const stack = [];
   // We reference the first element as processElem will always return the root node
   // of the tree when it is called on the first element.
   // We must process all elements however, as these become children of the root.
-  const tree = astArray.map(processElem(stack))[0];
+  const tree = tokenArray.map(processElem(stack))[0];
   return tree;
 };
 
@@ -260,6 +260,6 @@ const parseAst = (ast) => {
  * @returns JavaScript object containing the parsed JSON
  */
 const parseJson = (jsonString) =>
-  pipe(jsonString, [generateAstArray, generateAst, parseAst]);
+  pipe(jsonString, [generatetokenArray, generateAst, parseAst]);
 
 module.exports = parseJson;
