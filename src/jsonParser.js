@@ -239,8 +239,12 @@ const generateAst = (astArray) => {
  */
 const parseAst = (ast) => {
   if (ast instanceof Obj) {
+    // Dealing with an object, map each of its values
+    // over this parseAst function recursively
     return objMap(ast.edges, parseAst);
   } else if (ast instanceof Arr) {
+    // Dealing with an array, map each of its elements
+    // over this parseAst function recursively
     return ast.edges.map(parseAst);
   } else {
     // Dealing with a raw value (number, string, null etc) so just return it
