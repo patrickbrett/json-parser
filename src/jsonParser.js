@@ -1,9 +1,4 @@
-const fs = require('fs');
-const util = require('util');
-
-const inspect = (obj) => console.log(util.inspect(obj, true, null));
-
-const exampleJson = fs.readFileSync('example3.json').toString();
+const { last, inspect, read, write, pipe } = require('./util');
 
 class Base {
 	constructor() {
@@ -12,8 +7,6 @@ class Base {
 }
 
 class Obj {
-	closer = '}';
-
 	constructor() {
 		this.edges = {};
 		this.pendingKey = null;
@@ -21,8 +14,6 @@ class Obj {
 }
 
 class Arr {
-	closer = ']';
-
 	constructor() {
 		this.edges = [];
 	}
@@ -60,7 +51,12 @@ const generateAstArray = (jsonString) => {
 const generateAst = (astArray) => {
 	const stack = [];
 
-	const tree = new Base();
+	let tree;
+
+	const closerTypes = {
+		'}': Obj,
+		']': Arr
+	}
 
 	for (elem of astArray) {
 		if (['{', '['].includes(elem)) {
@@ -72,22 +68,22 @@ const generateAst = (astArray) => {
 				}
 			})();
 			if (!stack.length) {
-				tree.pointer = astElem;
+				tree = astElem;
 			}
 			stack.push(astElem);
 		} else if (['}', ']'].includes(elem)) {
-			if (stack.length > 0 && stack[stack.length - 1].closer === elem) {
+			if (stack.length > 0 && last(stack) instanceof closerTypes[elem]) {
 				const toAdd = stack.pop();
 
 				// TODO: reduce repetition
 				if (stack.length > 0) {
-					const lastElem = stack[stack.length - 1];
-					if (lastElem.closer === '}') {
+					const lastElem = last(stack);
+					if (lastElem instanceof Obj) {
 						if (lastElem.pendingKey) {
 							lastElem.edges[lastElem.pendingKey] = toAdd;
 							lastElem.pendingKey = null;
 						}
-					} else if (lastElem.closer === ']') {
+					} else if (lastElem instanceof Arr) {
 						lastElem.edges.push(toAdd);
 					}
 				}
@@ -101,15 +97,15 @@ const generateAst = (astArray) => {
 			const parsedVal = Number.isNaN(Number(strippedElem)) ? strippedElem : Number(strippedElem);
 
 			if (stack.length > 0) {
-				const lastElem = stack[stack.length - 1];
-				if (lastElem.closer === '}') {
+				const lastElem = last(stack);
+				if (lastElem instanceof Obj) {
 					if (lastElem.pendingKey) {
 						lastElem.edges[lastElem.pendingKey] = new Val(parsedVal);
 						lastElem.pendingKey = null;
 					} else {
 						lastElem.pendingKey = strippedElem;
 					}
-				} else if (lastElem.closer === ']') {
+				} else if (lastElem instanceof Arr) {
 					lastElem.edges.push(new Val(parsedVal));
 				}
 			}
@@ -120,26 +116,27 @@ const generateAst = (astArray) => {
 	return tree;
 };
 
-const parseAstHelper = (value) => {
+const parseAst = (value) => {
   if (value instanceof Val) {
     return value.val;
   } else if (value instanceof Obj) {
     const obj = {};
     Object.keys(value.edges).forEach(key => {
-      obj[key] = parseAstHelper(value.edges[key]);
+      obj[key] = parseAst(value.edges[key]);
     })
     return obj;
   } else if (value instanceof Arr) {
-    return value.edges.map(parseAstHelper);
+    return value.edges.map(parseAst);
   }
 };
 
-const parseAst = (ast) => {
-  return parseAstHelper(ast.pointer);
-};
+const parseJson = jsonString => pipe(jsonString, [generateAstArray, generateAst, parseAst]);
 
-const parsed = parseAst(generateAst(generateAstArray(exampleJson)));
+const run = () => {
+	const exampleJson = read('example.json');
+	const parsed = parseJson(exampleJson);
+	inspect(parsed);
+	write('out.json', parsed);
+}
 
-inspect(parsed);
-
-fs.writeFileSync('out.json', JSON.stringify(parsed));
+run();
