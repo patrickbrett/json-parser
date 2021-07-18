@@ -8,23 +8,30 @@ const generateAstArray = (jsonString) => {
   // TODO: don't remove whitespace within strings
   const noWhitespace = pipe(jsonString, [
     replaceAll("\n", ""),
-    replaceAll(" ", ""),
+    // replaceAll(" ", ""),
   ]);
   const astArray = [];
+
+	let insideQuotes = false;
 
   let current = [];
   for (let i = 0; i < noWhitespace.length; i++) {
     const char = noWhitespace[i];
-    // const prevChar = i > 0 ? noWhitespace[i-1] : null;
-    if (specialChars.includes(char)) {
+    const prevChar = i > 0 ? noWhitespace[i-1] : null;
+
+		if (char === '"' && prevChar !== '\\') {
+			insideQuotes = !insideQuotes;
+		}
+
+    if (specialChars.includes(char) && !insideQuotes) {
       if (current.length) {
         astArray.push(current.join(""));
         current = [];
       }
       astArray.push(char);
-    } else {
-      current.push(char);
-    }
+    } else if (insideQuotes || char !== ' ') {
+			current.push(char);
+		}
   }
 
   return astArray;
@@ -34,15 +41,16 @@ const putSubvalue = (stack, toAdd, toAddPendingKey) => {
   if (stack.length === 0) return;
 
   const lastElem = last(stack);
-  if (lastElem instanceof Obj) {
+
+	if (lastElem instanceof Arr) {
+    lastElem.edges.push(toAdd);
+  } else if (lastElem instanceof Obj) {
     if (lastElem.pendingKey) {
       lastElem.edges[lastElem.pendingKey] = toAdd;
       lastElem.pendingKey = null;
     } else {
       lastElem.pendingKey = toAddPendingKey;
     }
-  } else if (lastElem instanceof Arr) {
-    lastElem.edges.push(toAdd);
   }
 };
 
@@ -67,9 +75,11 @@ const processElem =
     }
 
     const strippedElem = replaceAll('"', "")(elem);
-    const parsedVal = Number.isNaN(Number(strippedElem))
-      ? strippedElem
-      : Number(strippedElem);
+    const parsedVal = (() => {
+			if (elem === 'null') return null;
+			if (Number.isNaN(Number(strippedElem))) return strippedElem;
+			return Number(strippedElem);
+		})();
 
     putSubvalue(stack, parsedVal, strippedElem);
   };

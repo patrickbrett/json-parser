@@ -9,6 +9,8 @@ const tests = [
   ["kv-with-array", "correctly parses key value pairs with array"],
   ["escaped", "correctly parses escaped values"],
   ["complex1", "correctly parses complex json [1]"],
+  ["nulls", "correctly handles null values"],
+  
 ];
 
 tests.forEach(([fname, desc]) => {
