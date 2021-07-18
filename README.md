@@ -15,7 +15,7 @@ The code is designed to be as modular as possible and while mutation is used in 
 - { "key": "value pairs" }
 - ["arrays"]
 - { "nested": { "objects": ["and", "arrays"]}}
-- { "escaped": "\"values\"" }
+- { "escaped": "\\"values\\"" }
 - { "values": "that", "are": null }
 
 ## How to use
