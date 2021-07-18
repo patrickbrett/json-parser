@@ -1,29 +1,6 @@
-const { last, inspect, read, write, pipe } = require('./util');
+const { last, pipe } = require('./util');
 
-class Base {
-	constructor() {
-		this.pointer = null;
-	}
-}
-
-class Obj {
-	constructor() {
-		this.edges = {};
-		this.pendingKey = null;
-	}
-}
-
-class Arr {
-	constructor() {
-		this.edges = [];
-	}
-}
-
-class Val {
-	constructor(val) {
-		this.val = val;
-	}
-}
+const { Obj, Arr, Val } = require('./AstElems');
 
 const generateAstArray = (jsonString) => {
 	// TODO: don't remove whitespace within strings
@@ -112,7 +89,6 @@ const generateAst = (astArray) => {
 		}
 	}
 
-	inspect(tree);
 	return tree;
 };
 
@@ -132,11 +108,4 @@ const parseAst = (value) => {
 
 const parseJson = jsonString => pipe(jsonString, [generateAstArray, generateAst, parseAst]);
 
-const run = () => {
-	const exampleJson = read('example.json');
-	const parsed = parseJson(exampleJson);
-	inspect(parsed);
-	write('out.json', parsed);
-}
-
-run();
+module.exports = parseJson;
