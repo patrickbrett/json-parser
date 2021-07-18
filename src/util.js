@@ -25,4 +25,13 @@ const pipe = (init, funcs) => {
 const replaceAll = (from, to) => (str) =>
   str.replace(new RegExp(from, "g"), to);
 
-module.exports = { last, inspect, read, write, pipe, replaceAll };
+const objMap = (obj, mapFunc) => {
+  const newObj = {};
+  Object.keys(obj).forEach((key) => {
+    const val = obj[key];
+    newObj[key] = mapFunc(val);
+  });
+  return newObj;
+}
+
+module.exports = { last, inspect, read, write, pipe, replaceAll, objMap };

@@ -1,8 +1,10 @@
-const { last, pipe, replaceAll } = require("./util");
+const { last, pipe, replaceAll, objMap } = require("./util");
 
 const { Obj, Arr } = require("./AstElems");
 
 const generateAstArray = (jsonString) => {
+	const specialChars = ["{", "}", ":", "[", "]", ",", "\\"];
+
   // TODO: don't remove whitespace within strings
   const noWhitespace = pipe(jsonString, [
     replaceAll("\n", ""),
@@ -13,7 +15,8 @@ const generateAstArray = (jsonString) => {
   let current = [];
   for (let i = 0; i < noWhitespace.length; i++) {
     const char = noWhitespace[i];
-    if (["{", "}", ":", "[", "]", ","].includes(char)) {
+		// const prevChar = i > 0 ? noWhitespace[i-1] : null;
+    if (specialChars.includes(char)) {
       if (current.length) {
         astArray.push(current.join(""));
         current = [];
@@ -92,11 +95,7 @@ const generateAst = (astArray) => {
 
 const parseAst = (value) => {
   if (value instanceof Obj) {
-    const obj = {};
-    Object.keys(value.edges).forEach((key) => {
-      obj[key] = parseAst(value.edges[key]);
-    });
-    return obj;
+		return objMap(value.edges, parseAst);
   } else if (value instanceof Arr) {
     return value.edges.map(parseAst);
   } else {

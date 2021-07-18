@@ -4,7 +4,7 @@
   "description": "Pure JavaScript JSON parser - built to learn how ASTs work",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest"
   },
   "repository": {
     "type": "git",
@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/patrickbrett/json-parser/issues"
   },
-  "homepage": "https://github.com/patrickbrett/json-parser#readme"
+  "homepage": "https://github.com/patrickbrett/json-parser#readme",
+  "devDependencies": {
+    "jest": "^27.0.6"
+  }
 }
