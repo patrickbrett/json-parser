@@ -120,6 +120,8 @@ See `src/example.js` for a more elaborate example that reads a file, parses the 
 
 ### Running tests
 
+Unit tests for all major use cases are included. To run them, execute:
+
 `npm test`
 
 ## Areas for improvement
