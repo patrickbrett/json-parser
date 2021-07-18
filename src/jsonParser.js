@@ -5,19 +5,17 @@ const { Obj, Arr } = require("./AstElems");
 const generateAstArray = (jsonString) => {
   const specialChars = ["{", "}", ":", "[", "]", ",", "\\"];
 
-  // TODO: don't remove whitespace within strings
-  const noWhitespace = pipe(jsonString, [
+  const noNewlines = pipe(jsonString, [
     replaceAll("\n", ""),
-    // replaceAll(" ", ""),
   ]);
   const astArray = [];
 
 	let insideQuotes = false;
 
   let current = [];
-  for (let i = 0; i < noWhitespace.length; i++) {
-    const char = noWhitespace[i];
-    const prevChar = i > 0 ? noWhitespace[i-1] : null;
+  for (let i = 0; i < noNewlines.length; i++) {
+    const char = noNewlines[i];
+    const prevChar = i > 0 ? noNewlines[i-1] : null;
 
 		if (char === '"' && prevChar !== '\\') {
 			insideQuotes = !insideQuotes;
